@@ -3,101 +3,62 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bras Robotisé — AR Viewer</title>
+  <title>AR Robot Viewer Pro</title>
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg: #0a0a0f; --surface: #13131a; --border: #1e1e2e;
-      --accent: #00e5ff; --text: #e8e8f0; --muted: #6b6b80;
-    }
-
-    body {
-      background: var(--bg); color: var(--text);
-      font-family: 'Syne', sans-serif; min-height: 100vh;
-      display: flex; flex-direction: column; align-items: center;
-    }
-
-    /* Grille de fond */
-    body::before {
-      content: ''; position: fixed; inset: 0;
-      background-image: linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
-      background-size: 40px 40px; pointer-events: none; z-index: 0;
-    }
-
-    header { position: relative; z-index: 1; width: 100%; max-width: 520px; padding: 40px 24px; text-align: center; }
-    .badge {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: rgba(0,229,255,0.08); border: 1px solid rgba(0,229,255,0.2);
-      border-radius: 100px; padding: 4px 14px; font-family: 'JetBrains Mono', monospace;
-      font-size: 11px; color: var(--accent); margin-bottom: 20px;
-    }
-
-    h1 { font-size: clamp(26px, 7vw, 40px); font-weight: 800; line-height: 1.1; margin-bottom: 10px; }
+    :root { --bg: #0a0a0f; --surface: #13131a; --border: #1e1e2e; --accent: #00e5ff; --text: #e8e8f0; --muted: #6b6b80; }
+    body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
+    
+    header { width: 100%; max-width: 520px; padding: 30px 24px; text-align: center; }
+    .badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(0,229,255,0.08); border: 1px solid rgba(0,229,255,0.2); border-radius: 100px; padding: 4px 14px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); margin-bottom: 15px; }
 
     /* Zone de dépôt */
-    .drop-zone {
-      position: relative; z-index: 1; width: calc(100% - 48px); max-width: 472px;
-      border: 1.5px dashed var(--border); border-radius: 20px; padding: 40px 24px;
-      text-align: center; cursor: pointer; background: var(--surface); transition: 0.2s;
-    }
-    .drop-zone.drag-over { border-color: var(--accent); background: rgba(0,229,255,0.05); }
+    .drop-zone { width: calc(100% - 48px); max-width: 472px; border: 1.5px dashed var(--border); border-radius: 20px; padding: 40px 24px; text-align: center; cursor: pointer; background: var(--surface); }
+    .btn-upload { background: var(--accent); color: #000; font-weight: 600; padding: 12px 24px; border-radius: 100px; border: none; cursor: pointer; margin-top: 20px; }
 
-    .btn-upload {
-      background: var(--accent); color: #000; font-weight: 600;
-      padding: 12px 24px; border-radius: 100px; border: none; cursor: pointer; margin-top: 20px;
-    }
-
-    /* Viewer */
-    .viewer-container {
-      position: relative; z-index: 1; width: calc(100% - 48px); max-width: 472px;
-      display: none; flex-direction: column; gap: 16px;
-    }
+    /* Container du Viewer */
+    .viewer-container { width: calc(100% - 48px); max-width: 472px; display: none; flex-direction: column; gap: 12px; margin-bottom: 50px; }
     .viewer-container.visible { display: flex; }
 
-    model-viewer {
-      width: 100%; height: 400px; border-radius: 20px;
-      background: #000; border: 1px solid var(--border);
-    }
+    model-viewer { width: 100%; height: 400px; border-radius: 20px; background: #000; border: 1px solid var(--border); }
 
-    .info-bar {
-      display: flex; align-items: center; justify-content: space-between;
-      background: var(--surface); padding: 12px; border-radius: 12px; border: 1px solid var(--border);
-    }
-
-    .ar-instructions {
-      background: rgba(0,229,255,0.05); border: 1px solid rgba(0,229,255,0.1);
-      border-radius: 16px; padding: 20px; font-size: 13px;
-    }
-
-    .step { display: flex; gap: 10px; margin-top: 8px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+    /* Panneau de réglages */
+    .settings-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 15px; }
+    .setting-item { display: flex; align-items: center; justify-content: space-between; }
+    .setting-label { font-size: 13px; font-weight: 600; color: var(--text); }
     
-    footer { margin: 40px 0; font-size: 11px; color: var(--muted); text-align: center; line-height: 1.6; }
+    .btn-group { display: flex; gap: 5px; }
+    .btn-small { background: var(--border); border: none; color: var(--text); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-family: 'JetBrains Mono'; }
+    .btn-small:hover { background: var(--muted); }
+
+    /* Switch toggle */
+    .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; inset: 0; background-color: var(--border); transition: .4s; border-radius: 20px; }
+    .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: var(--accent); }
+    input:checked + .slider:before { transform: translateX(20px); }
+
+    .ar-btn { background: var(--accent); color: #000; border: none; padding: 12px; border-radius: 10px; font-weight: 800; cursor: pointer; width: 100%; margin-top: 10px; }
   </style>
 </head>
 <body>
 
 <header>
-  <div class="badge">PROJET STI2D · SIN</div>
-  <h1>AR Robot Viewer</h1>
-  <p style="color:var(--muted); font-size: 14px;">Visualisation 3D temps réel</p>
+  <div class="badge">STI2D · OPTIMISÉ AR</div>
+  <h1>Configuration du Bras</h1>
 </header>
 
 <div class="drop-zone" id="dropZone">
-  <div style="font-size: 40px; margin-bottom: 10px;">🤖</div>
-  <h2>Importer le bras (.glb)</h2>
-  <p style="color:var(--muted); font-size: 12px; margin-top: 5px;">Glisse ton fichier ici</p>
-  <button class="btn-upload" onclick="document.getElementById('fileInput').click()">Parcourir les fichiers</button>
+  <div style="font-size: 40px;">🦾</div>
+  <h2>Charger le modèle</h2>
+  <button class="btn-upload" onclick="document.getElementById('fileInput').click()">Choisir .GLB</button>
   <input type="file" id="fileInput" accept=".glb" style="display:none">
 </div>
 
 <div class="viewer-container" id="viewerContainer">
-  <div class="info-bar">
-    <span id="fileName" style="color:var(--accent); font-family:monospace; font-size:12px;">Modele.glb</span>
-    <button onclick="location.reload()" style="background:none; border:none; color:var(--muted); cursor:pointer; font-size:12px;">✕ Fermer</button>
-  </div>
-
   <model-viewer
     id="viewer"
     ar
@@ -106,48 +67,66 @@
     touch-action="pan-y"
     shadow-intensity="1"
     auto-rotate
-    style="width: 100%; height: 400px;">
-    <button slot="ar-button" style="background: var(--accent); border-radius: 8px; border: none; position: absolute; bottom: 16px; right: 16px; padding: 10px 20px; font-weight: bold; cursor:pointer;">
-      👋 VOIR EN AR
-    </button>
-  </model-viewer>
+    ar-scale="auto"> </model-viewer>
 
-  <div class="ar-instructions">
-    <h3 style="color:var(--accent); font-size:14px;">Mode d'emploi :</h3>
-    <div class="step"><span>1.</span><span>Utilise <b>Chrome</b> sur Android.</span></div>
-    <div class="step"><span>2.</span><span>Clique sur le bouton bleu dans le viewer.</span></div>
-    <div class="step"><span>3.</span><span>Déplace ton téléphone pour détecter le sol.</span></div>
+  <div class="settings-panel">
+    <div class="setting-item">
+      <span class="setting-label">Autoriser le Zoom en AR</span>
+      <label class="switch">
+        <input type="checkbox" id="zoomToggle" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="setting-item">
+      <span class="setting-label">Orienter l'objet (90°)</span>
+      <div class="btn-group">
+        <button class="btn-small" onclick="rotateModel('x')">Axe X</button>
+        <button class="btn-small" onclick="rotateModel('y')">Axe Y</button>
+        <button class="btn-small" onclick="rotateModel('z')">Axe Z</button>
+      </div>
+    </div>
+    
+    <button class="ar-btn" onclick="activateAR()">👁 VOIR DANS MA CHAMBRE</button>
+    <button onclick="location.reload()" style="background:none; border:none; color:var(--muted); cursor:pointer; font-size:11px;">Changer de fichier</button>
   </div>
 </div>
 
-<footer>
-  Système d'Information et Numérique<br>
-  <span style="color:var(--accent)">STI2D - 2026</span>
-</footer>
-
 <script>
-  const dropZone = document.getElementById('dropZone');
-  const fileInput = document.getElementById('fileInput');
-  const viewerContainer = document.getElementById('viewerContainer');
   const viewer = document.getElementById('viewer');
-  const fileNameDisplay = document.getElementById('fileName');
+  const zoomToggle = document.getElementById('zoomToggle');
+  
+  let rotX = 0, rotY = 0, rotZ = 0;
 
-  function handleFile(file) {
-    if (file && file.name.endsWith('.glb')) {
-      const url = URL.createObjectURL(file);
-      viewer.src = url;
-      fileNameDisplay.textContent = file.name;
-      dropZone.style.display = 'none';
-      viewerContainer.classList.add('visible');
-    } else {
-      alert("Erreur : Seuls les fichiers .glb sont acceptés.");
-    }
+  // Gestion du Zoom
+  zoomToggle.addEventListener('change', () => {
+    // Si coché -> auto (zoom possible), si décoché -> fixed (taille réelle bloquée)
+    viewer.setAttribute('ar-scale', zoomToggle.checked ? "auto" : "fixed");
+  });
+
+  // Gestion de l'orientation
+  function rotateModel(axis) {
+    if(axis === 'x') rotX += 90;
+    if(axis === 'y') rotY += 90;
+    if(axis === 'z') rotZ += 90;
+    
+    // On applique la rotation au modèle
+    viewer.orientation = `${rotX}deg ${rotY}deg ${rotZ}deg`;
   }
 
-  fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
-  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-  dropZone.addEventListener('drop', e => { e.preventDefault(); handleFile(e.dataTransfer.files[0]); });
+  function activateAR() {
+    viewer.activateAR();
+  }
+
+  // Import Fichier
+  document.getElementById('fileInput').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (file) {
+      viewer.src = URL.createObjectURL(file);
+      document.getElementById('dropZone').style.display = 'none';
+      document.getElementById('viewerContainer').classList.add('visible');
+    }
+  });
 </script>
 
 </body>
