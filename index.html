@@ -8,42 +8,39 @@
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root { --bg: #0a0a0f; --surface: #13131a; --border: #1e1e2e; --accent: #00e5ff; --text: #e8e8f0; --muted: #6b6b80; }
+    :root { --bg: #0a0a0f; --surface: #13131a; --border: #1e1e2e; --accent: #00e5ff; --text: #e8e8f0; --muted: #6b6b80; --lock: #ff3366; }
     body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
     
     header { width: 100%; max-width: 520px; padding: 30px 24px; text-align: center; }
     .badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(0,229,255,0.08); border: 1px solid rgba(0,229,255,0.2); border-radius: 100px; padding: 4px 14px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); margin-bottom: 15px; }
 
-    /* Zone de dépôt */
     .drop-zone { width: calc(100% - 48px); max-width: 472px; border: 1.5px dashed var(--border); border-radius: 20px; padding: 40px 24px; text-align: center; cursor: pointer; background: var(--surface); }
     .btn-upload { background: var(--accent); color: #000; font-weight: 600; padding: 12px 24px; border-radius: 100px; border: none; cursor: pointer; margin-top: 20px; }
 
-    /* Container du Viewer */
     .viewer-container { width: calc(100% - 48px); max-width: 472px; display: none; flex-direction: column; gap: 12px; margin-bottom: 50px; }
     .viewer-container.visible { display: flex; }
 
     .viewer-wrapper { position: relative; width: 100%; height: 400px; }
     model-viewer { width: 100%; height: 100%; border-radius: 20px; background: #000; border: 1px solid var(--border); }
 
-    /* Bouton Focus flottant dans le viewer */
     .btn-focus { position: absolute; top: 12px; right: 12px; background: rgba(255,255,255,0.1); backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; font-family: 'JetBrains Mono'; z-index: 10; transition: 0.2s; }
     .btn-focus:hover { background: rgba(255,255,255,0.2); border-color: var(--accent); }
 
-    /* Panneau de réglages */
     .settings-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 15px; }
     .setting-item { display: flex; align-items: center; justify-content: space-between; }
-    .setting-label { font-size: 13px; font-weight: 600; color: var(--text); }
+    .setting-label { font-size: 13px; font-weight: 600; color: var(--text); display: flex; flex-direction: column; }
+    .setting-sub { font-size: 10px; color: var(--muted); font-family: 'JetBrains Mono'; margin-top: 2px;}
     
     .btn-group { display: flex; gap: 5px; }
     .btn-small { background: var(--border); border: none; color: var(--text); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-family: 'JetBrains Mono'; }
     .btn-small:hover { background: var(--muted); }
 
-    /* Switch toggle */
+    /* Switch toggle rouge (Verrouillage) */
     .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
     .switch input { opacity: 0; width: 0; height: 0; }
     .slider { position: absolute; cursor: pointer; inset: 0; background-color: var(--border); transition: .4s; border-radius: 20px; }
     .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-    input:checked + .slider { background-color: var(--accent); }
+    input:checked + .slider { background-color: var(--lock); }
     input:checked + .slider:before { transform: translateX(20px); }
 
     .ar-btn { background: var(--accent); color: #000; border: none; padding: 12px; border-radius: 10px; font-weight: 800; cursor: pointer; width: 100%; margin-top: 10px; }
@@ -52,14 +49,14 @@
 <body>
 
 <header>
-  <div class="badge">STI2D · OPTIMISÉ AR</div>
-  <h1>Configuration du Bras</h1>
+  <div class="badge">CONTRÔLE D'ENCOMBREMENT AR</div>
+  <h1>Validation du Bras</h1>
 </header>
 
 <div class="drop-zone" id="dropZone">
-  <div style="font-size: 40px;">🦾</div>
-  <h2>Charger le modèle</h2>
-  <button class="btn-upload" onclick="document.getElementById('fileInput').click()">Choisir .GLB</button>
+  <div style="font-size: 40px;">📏</div>
+  <h2>Vérifier la taille réelle</h2>
+  <button class="btn-upload" onclick="document.getElementById('fileInput').click()">Importer le fichier .GLB</button>
   <input type="file" id="fileInput" accept=".glb" style="display:none">
 </div>
 
@@ -76,21 +73,24 @@
       touch-action="pan-y"
       shadow-intensity="1"
       auto-rotate
-      ar-scale="auto">
+      ar-scale="fixed">
     </model-viewer>
   </div>
 
   <div class="settings-panel">
     <div class="setting-item">
-      <span class="setting-label">Autoriser le Zoom en AR</span>
+      <div class="setting-label">
+        Verrouiller Taille Réelle (1:1)
+        <span class="setting-sub">Bloque le zoom en AR pour tester l'encombrement</span>
+      </div>
       <label class="switch">
-        <input type="checkbox" id="zoomToggle" checked>
+        <input type="checkbox" id="scaleToggle" checked>
         <span class="slider"></span>
       </label>
     </div>
 
     <div class="setting-item">
-      <span class="setting-label">Pivoter l'objet (90°)</span>
+      <div class="setting-label">Pivoter l'objet (90°)</div>
       <div class="btn-group">
         <button class="btn-small" onclick="rotateModel('x')">Axe X</button>
         <button class="btn-small" onclick="rotateModel('y')">Axe Y</button>
@@ -98,42 +98,37 @@
       </div>
     </div>
     
-    <button class="ar-btn" onclick="activateAR()">👁 VOIR DANS MA CHAMBRE</button>
+    <button class="ar-btn" onclick="activateAR()">👁 PLACER SUR LE BUREAU</button>
     <button onclick="location.reload()" style="background:none; border:none; color:var(--muted); cursor:pointer; font-size:11px; margin-top:5px;">Changer de fichier</button>
   </div>
 </div>
 
 <script>
   const viewer = document.getElementById('viewer');
-  const zoomToggle = document.getElementById('zoomToggle');
+  const scaleToggle = document.getElementById('scaleToggle');
   
   let rotX = 0, rotY = 0, rotZ = 0;
 
-  // Gestion du Zoom en AR
-  zoomToggle.addEventListener('change', () => {
-    viewer.setAttribute('ar-scale', zoomToggle.checked ? "auto" : "fixed");
+  // Gestion du Verrouillage 1:1
+  scaleToggle.addEventListener('change', () => {
+    // Si coché (par défaut) = "fixed" (Taille réelle, impossible de zoomer)
+    // Si décoché = "auto" (L'utilisateur peut pincer pour agrandir/rétrécir)
+    viewer.setAttribute('ar-scale', scaleToggle.checked ? "fixed" : "auto");
   });
 
-  // Fonction pour refaire le focus (comme la touche F sur SolidWorks)
   function resetFocus() {
-    viewer.cameraOrbit = "0deg 75deg 105%"; // Remet la caméra à un angle neutre
-    viewer.cameraTarget = "auto auto auto"; // Vise le centre de l'objet
-    viewer.jumpCameraToGoal(); // Fait un mouvement fluide vers la nouvelle position
+    viewer.cameraOrbit = "0deg 75deg 105%";
+    viewer.cameraTarget = "auto auto auto";
+    viewer.jumpCameraToGoal();
   }
 
-  // Fonction pour tourner l'objet SANS qu'il disparaisse
   async function rotateModel(axis) {
     if(axis === 'x') rotX += 90;
     if(axis === 'y') rotY += 90;
     if(axis === 'z') rotZ += 90;
     
-    // 1. On applique la rotation
     viewer.orientation = `${rotX}deg ${rotY}deg ${rotZ}deg`;
-    
-    // 2. MAGIE : On force le viewer à recalculer les dimensions de la boîte (évite la disparition)
     await viewer.updateFraming();
-    
-    // 3. On recadre la caméra direct dessus pour être sûr de ne pas le perdre
     resetFocus();
   }
 
@@ -141,7 +136,6 @@
     viewer.activateAR();
   }
 
-  // Import Fichier
   document.getElementById('fileInput').addEventListener('change', e => {
     const file = e.target.files[0];
     if (file) {
