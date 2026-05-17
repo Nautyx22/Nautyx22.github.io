@@ -22,7 +22,12 @@
     .viewer-container { width: calc(100% - 48px); max-width: 472px; display: none; flex-direction: column; gap: 12px; margin-bottom: 50px; }
     .viewer-container.visible { display: flex; }
 
-    model-viewer { width: 100%; height: 400px; border-radius: 20px; background: #000; border: 1px solid var(--border); }
+    .viewer-wrapper { position: relative; width: 100%; height: 400px; }
+    model-viewer { width: 100%; height: 100%; border-radius: 20px; background: #000; border: 1px solid var(--border); }
+
+    /* Bouton Focus flottant dans le viewer */
+    .btn-focus { position: absolute; top: 12px; right: 12px; background: rgba(255,255,255,0.1); backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; font-family: 'JetBrains Mono'; z-index: 10; transition: 0.2s; }
+    .btn-focus:hover { background: rgba(255,255,255,0.2); border-color: var(--accent); }
 
     /* Panneau de réglages */
     .settings-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 15px; }
@@ -59,15 +64,21 @@
 </div>
 
 <div class="viewer-container" id="viewerContainer">
-  <model-viewer
-    id="viewer"
-    ar
-    ar-modes="webxr scene-viewer"
-    camera-controls
-    touch-action="pan-y"
-    shadow-intensity="1"
-    auto-rotate
-    ar-scale="auto"> </model-viewer>
+  
+  <div class="viewer-wrapper">
+    <button class="btn-focus" onclick="resetFocus()">🎯 Recadrer</button>
+    
+    <model-viewer
+      id="viewer"
+      ar
+      ar-modes="webxr scene-viewer"
+      camera-controls
+      touch-action="pan-y"
+      shadow-intensity="1"
+      auto-rotate
+      ar-scale="auto">
+    </model-viewer>
+  </div>
 
   <div class="settings-panel">
     <div class="setting-item">
@@ -79,7 +90,7 @@
     </div>
 
     <div class="setting-item">
-      <span class="setting-label">Orienter l'objet (90°)</span>
+      <span class="setting-label">Pivoter l'objet (90°)</span>
       <div class="btn-group">
         <button class="btn-small" onclick="rotateModel('x')">Axe X</button>
         <button class="btn-small" onclick="rotateModel('y')">Axe Y</button>
@@ -88,7 +99,7 @@
     </div>
     
     <button class="ar-btn" onclick="activateAR()">👁 VOIR DANS MA CHAMBRE</button>
-    <button onclick="location.reload()" style="background:none; border:none; color:var(--muted); cursor:pointer; font-size:11px;">Changer de fichier</button>
+    <button onclick="location.reload()" style="background:none; border:none; color:var(--muted); cursor:pointer; font-size:11px; margin-top:5px;">Changer de fichier</button>
   </div>
 </div>
 
@@ -98,20 +109,32 @@
   
   let rotX = 0, rotY = 0, rotZ = 0;
 
-  // Gestion du Zoom
+  // Gestion du Zoom en AR
   zoomToggle.addEventListener('change', () => {
-    // Si coché -> auto (zoom possible), si décoché -> fixed (taille réelle bloquée)
     viewer.setAttribute('ar-scale', zoomToggle.checked ? "auto" : "fixed");
   });
 
-  // Gestion de l'orientation
-  function rotateModel(axis) {
+  // Fonction pour refaire le focus (comme la touche F sur SolidWorks)
+  function resetFocus() {
+    viewer.cameraOrbit = "0deg 75deg 105%"; // Remet la caméra à un angle neutre
+    viewer.cameraTarget = "auto auto auto"; // Vise le centre de l'objet
+    viewer.jumpCameraToGoal(); // Fait un mouvement fluide vers la nouvelle position
+  }
+
+  // Fonction pour tourner l'objet SANS qu'il disparaisse
+  async function rotateModel(axis) {
     if(axis === 'x') rotX += 90;
     if(axis === 'y') rotY += 90;
     if(axis === 'z') rotZ += 90;
     
-    // On applique la rotation au modèle
+    // 1. On applique la rotation
     viewer.orientation = `${rotX}deg ${rotY}deg ${rotZ}deg`;
+    
+    // 2. MAGIE : On force le viewer à recalculer les dimensions de la boîte (évite la disparition)
+    await viewer.updateFraming();
+    
+    // 3. On recadre la caméra direct dessus pour être sûr de ne pas le perdre
+    resetFocus();
   }
 
   function activateAR() {
